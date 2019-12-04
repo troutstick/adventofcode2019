@@ -39,6 +39,39 @@ def day1_p2():
 
 from operator import add, mul
 
+def day2_p1():
+    """>>> day2_p1()
+    7594646
+    """
+    input_list = original_input()
+    input_list[1] = 12
+    input_list[2] = 2
+    intcode(input_list)
+    return input_list[0]
+
+def day2_p2():
+    """>>> day2_p2()
+    3376
+    """
+    for noun in range(100):
+        for verb in range(100):
+            input_list = original_input()
+            input_list[1] = noun
+            input_list[2] = verb
+            intcode(input_list)
+            if input_list[0] == 19690720:
+                return 100 * noun + verb
+
+def original_input():
+    """Returns the input list as provided."""
+    with open("day2input.txt", "r") as file:
+        contents = file.read()
+        input_list_str = contents.split(",")
+        input_list = []
+        for str in input_list_str:
+            input_list.append(int(str))
+    return input_list
+
 def intcode(input_list):
     """Takes in an input list and mutates it accordingly"""
 
@@ -68,18 +101,6 @@ def intcode(input_list):
         except IntcodeException:
             break
 
-def day2_p1():
-    with open("day2input.txt", "r") as file:
-        contents = file.read()
-        input_list_str = contents.split(",")
-        input_list = []
-        for str in input_list_str:
-            input_list.append(int(str))
-        # the list is now initialized!
-    input_list[1] = 12
-    input_list[2] = 2
-    intcode(input_list)
-    return input_list[0]
 
 class IntcodeException(Exception):
     pass
