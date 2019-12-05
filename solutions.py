@@ -285,7 +285,7 @@ def day4_p2():
 
 def two_adjacent_restrictive(num):
     """True if an adjacent pair of numbers is eq to each other
-    AND the largest adjacent sequence is only 2 numbers long"""
+    AND has an adjacent sequence 2 numbers long"""
 
     def largest_block(num, i):
         """Find the greatest number of consecutive instances of i in num.
