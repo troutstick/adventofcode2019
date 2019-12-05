@@ -126,7 +126,7 @@ def signal_delay(position):
     all_wires = wire_init()
     step1 = construct_wires(all_wires[0], True, position)
     step2 = construct_wires(all_wires[1], True, position)
-    if step1 and step2:
+    if step1 and step2: #step1 and step2 should never be 0 as intersections don't occur at origin
         return step1 + step2
     else:
         return float('inf')
@@ -198,10 +198,10 @@ def construct_wires(wire_instructions, intersect_mode=False, point=None):
     If in intersect mode, it'll return the number of steps taken to get
     to a given point.
     """
-    def wire_helper(coord):
+    def wire_helper(dim):
         nonlocal position
         nonlocal distance
-        if coord == 'x': # choose which dimension to modify
+        if dim == 'x': # choose which dim to modify
             index = 0
         else:
             index = 1
@@ -224,19 +224,19 @@ def construct_wires(wire_instructions, intersect_mode=False, point=None):
         direction = instruction[0]
         distance = int(instruction[1:])
         if direction == 'R':
-            coord = 'x'
+            dim = 'x'
         elif direction == 'U':
-            coord = 'y'
+            dim = 'y'
         elif direction == 'L':
-            coord = 'x'
+            dim = 'x'
             distance = -distance
         elif direction == 'D':
-            coord = 'y'
+            dim = 'y'
             distance = -distance
         else:
             print('help')
         try:
-            wire_helper(coord)
+            wire_helper(dim)
             total_steps += abs(distance)
         except WireException:
             total_steps += abs(distance)
@@ -274,6 +274,44 @@ def day4_p1():
         if not decreasing(i) and two_adjacent(i):
             ans += 1
     return ans
+
+def day4_p2():
+    ans = 0
+    for i in input_range:
+        if not decreasing(i) and two_adjacent_restrictive(i):
+            ans += 1
+    return ans
+
+
+def two_adjacent_restrictive(num):
+    """True if an adjacent pair of numbers is eq to each other
+    AND the largest adjacent sequence is only 2 numbers long"""
+
+    def largest_block(num, i):
+        """Find the greatest number of consecutive instances of i in num.
+        If num is 99919919999 and i is 9, the answer should be 4.
+        """
+        rightmost = num % 10
+        ans = 0
+        if num == 0:
+            return 0
+        while num and rightmost != i:
+            num //= 10
+            rightmost = num % 10
+        while num and rightmost == i:
+            ans += 1
+            num //= 10
+            rightmost = num % 10
+        return max(ans, largest_block(num, i))
+
+    if two_adjacent(num):
+        for i in range(10):
+            if largest_block(num, i) == 2:
+                return True
+    else:
+        return False
+
+
 
 def two_adjacent(num):
     """True if an adjacent pair of numbers is eq to each other"""
