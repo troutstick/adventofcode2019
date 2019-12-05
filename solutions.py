@@ -259,3 +259,36 @@ def wire_init():
 
 class WireException(Exception):
     pass
+
+#####################
+# Day 4
+#####################
+
+from operator import gt, eq
+
+input_range = range(136760, 595730 + 1)
+
+def day4_p1():
+    ans = 0
+    for i in input_range:
+        if not decreasing(i) and two_adjacent(i):
+            ans += 1
+    return ans
+
+def two_adjacent(num):
+    """True if an adjacent pair of numbers is eq to each other"""
+    return compare(num, eq)
+
+def decreasing(num):
+    """True if at least one instance of digits decreasing left to right"""
+    return compare(num, gt)
+
+def compare(num, op):
+    rightmost = num % 10
+    second_rightmost = (num // 10) % 10
+    if op(second_rightmost, rightmost):
+        return True
+    elif num > 99:
+        return compare(num // 10, op)
+    else:
+        return False
