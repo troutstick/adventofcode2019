@@ -110,29 +110,57 @@ class IntcodeException(Exception):
 #####################
 
 def day3_p1():
+    distances = list_intersections()
+    point = min(distances, key=manhattan)
+    return manhattan(point)
+
+def day3_p2():
+    distances = list_intersections()
+    point = min(distances, key=signal_delay)
+    return signal_delay(point)
+
+def manhattan(position, origin=[0, 0]):
+    return abs(position[0] - origin[0]) + abs(position[1] - origin[1])
+
+def signal_delay(position):
+    all_wires = wire_init()
+    step1 = construct_wires(all_wires[0], True, position)
+    step2 = construct_wires(all_wires[1], True, position)
+    if step1 and step2:
+        return step1 + step2
+    else:
+        return float('inf')
+
+def list_intersections():
     all_wires = wire_init()
     wire0 = construct_wires(all_wires[0])
     wire1 = construct_wires(all_wires[1])
-    print('hi')
     distances = []
     for first in wire0:
         for second in wire1:
             i = intersects(first, second)
             if i:
                 distances.append(i)
-    answer = min(distances, key=manhattan)
-    return manhattan(answer)
+    return distances
+
 
 def intersects(seg1, seg2):
     """Returns False if no intersection, or an intersection point
-    if two line segments intersect
+    if two line segments intersect.
     """
-
     def vertical(segment):
         """True if the segment's x coord doesn't change"""
         return segment[0][0] == segment[1][0]
 
-    if vertical(seg1):
+    def horizontal(segment):
+        """True if the segment's y coord doesn't change"""
+        return segment[0][1] == segment[1][1]
+
+    def point_particle(segment):
+        """True if segment is actually a point"""
+        return vertical(segment) and horizontal(segment)
+
+    if vertical(seg1) and horizontal(seg2):
         seg1_x = seg1[0][0]
         seg2_x_min = min(seg2[0][0], seg2[1][0])
         seg2_x_max = max(seg2[0][0], seg2[1][0])
@@ -140,35 +168,39 @@ def intersects(seg1, seg2):
         seg2_y = seg2[0][1]
         seg1_y_min = min(seg1[0][1], seg1[1][1])
         seg1_y_max = max(seg1[0][1], seg1[1][1])
-    elif vertical(seg2):
+    elif vertical(seg2) and horizontal(seg1):
         return intersects(seg2, seg1)
     else:
         return False
 
     if (
+        (point_particle(seg1) and seg2_y == seg1[0][1] and
+        seg1_x in range(seg2_x_min, seg2_x_max))
+        or
+        (point_particle(seg2) and seg1_x == seg2[0][0] and
+        seg2_y in range(seg1_y_min, seg1_y_max))
+        or
+        (
         seg1_x in range(seg2_x_min, seg2_x_max) and
         seg2_y in range(seg1_y_min, seg1_y_max)
-        ):
+        )):
         return [seg1_x, seg2_y]
     else:
         return False
 
-def manhattan(position):
-    return abs(position[0]) + abs(position[1])
 
-def a():
-    all_wires = wire_init()
-    wire0 = construct_wires(all_wires[0])
-    return wire0
-
-def construct_wires(wire_instructions):
+def construct_wires(wire_instructions, intersect_mode=False, point=None):
     """Constructs coordinate objects given a set of instructions as given
     by wire_init().
 
     An instruction is a string like 'R134', i.e. move right 134 units.
+
+    If in intersect mode, it'll return the number of steps taken to get
+    to a given point.
     """
-    def wire_helper(coord, distance):
+    def wire_helper(coord):
         nonlocal position
+        nonlocal distance
         if coord == 'x': # choose which dimension to modify
             index = 0
         else:
@@ -177,10 +209,17 @@ def construct_wires(wire_instructions):
         position[index] += distance
         second = tuple(position)
         segment = [first, second]
+        if intersect_mode:
+            i = intersects(segment, [tuple(point), tuple(point)])
+            if i:
+                position[index] -= distance
+                distance = manhattan(position, i)
+                raise WireException('intersection reached')
         wire.append(segment)
 
     position = [0, 0] # begin at origin
     wire = []
+    total_steps = 0
     for instruction in wire_instructions:
         direction = instruction[0]
         distance = int(instruction[1:])
@@ -196,7 +235,14 @@ def construct_wires(wire_instructions):
             distance = -distance
         else:
             print('help')
-        wire_helper(coord, distance)
+        try:
+            wire_helper(coord)
+            total_steps += abs(distance)
+        except WireException:
+            total_steps += abs(distance)
+            return total_steps
+    if intersect_mode:
+        return 0
     return wire
 
 def wire_init():
@@ -210,3 +256,6 @@ def wire_init():
             all_wires.append(wire)
 
     return all_wires
+
+class WireException(Exception):
+    pass
