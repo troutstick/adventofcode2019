@@ -1,3 +1,5 @@
+from operator import add, mul, sub
+
 #####################
 # Day 1
 #####################
@@ -36,8 +38,6 @@ def day1_p2():
 #####################
 # Day 2
 #####################
-
-from operator import add, mul
 
 def day2_p1():
     """>>> day2_p1()
@@ -79,9 +79,9 @@ def intcode(input_list):
         """Runs one iteration of the intcode program"""
         opcode = input_list[index]
         if opcode == 1:
-            operator = add
+            op = add
         elif opcode == 2:
-            operator = mul
+            op = mul
         elif opcode == 99:
             raise IntcodeException
         else:
@@ -91,7 +91,7 @@ def intcode(input_list):
         second_index = input_list[index+2]
         output_index = input_list[index+3]
 
-        input_list[output_index] = operator(input_list[first_index], input_list[second_index])
+        input_list[output_index] = op(input_list[first_index], input_list[second_index])
 
     i = 0
     while i < (len(input_list) - 1):
@@ -104,3 +104,109 @@ def intcode(input_list):
 
 class IntcodeException(Exception):
     pass
+
+#####################
+# Day 3
+#####################
+
+def day3_p1():
+    all_wires = wire_init()
+    wire0 = construct_wires(all_wires[0])
+    wire1 = construct_wires(all_wires[1])
+    print('hi')
+    distances = []
+    for first in wire0:
+        for second in wire1:
+            i = intersects(first, second)
+            if i:
+                distances.append(i)
+    answer = min(distances, key=manhattan)
+    return manhattan(answer)
+
+def intersects(seg1, seg2):
+    """Returns False if no intersection, or an intersection point
+    if two line segments intersect
+    """
+
+    def vertical(segment):
+        """True if the segment's x coord doesn't change"""
+        return segment[0][0] == segment[1][0]
+
+    if vertical(seg1):
+        seg1_x = seg1[0][0]
+        seg2_x_min = min(seg2[0][0], seg2[1][0])
+        seg2_x_max = max(seg2[0][0], seg2[1][0])
+
+        seg2_y = seg2[0][1]
+        seg1_y_min = min(seg1[0][1], seg1[1][1])
+        seg1_y_max = max(seg1[0][1], seg1[1][1])
+    elif vertical(seg2):
+        return intersects(seg2, seg1)
+    else:
+        return False
+
+    if (
+        seg1_x in range(seg2_x_min, seg2_x_max) and
+        seg2_y in range(seg1_y_min, seg1_y_max)
+        ):
+        return [seg1_x, seg2_y]
+    else:
+        return False
+
+def manhattan(position):
+    return abs(position[0]) + abs(position[1])
+
+def a():
+    all_wires = wire_init()
+    wire0 = construct_wires(all_wires[0])
+    return wire0
+
+def construct_wires(wire_instructions):
+    """Constructs coordinate objects given a set of instructions as given
+    by wire_init().
+
+    An instruction is a string like 'R134', i.e. move right 134 units.
+    """
+    def wire_helper(coord, distance):
+        nonlocal position
+        if coord == 'x': # choose which dimension to modify
+            index = 0
+        else:
+            index = 1
+        first = tuple(position)
+        position[index] += distance
+        second = tuple(position)
+        segment = [first, second]
+        wire.append(segment)
+
+    position = [0, 0] # begin at origin
+    wire = []
+    for instruction in wire_instructions:
+        direction = instruction[0]
+        distance = int(instruction[1:])
+        if direction == 'R':
+            coord = 'x'
+        elif direction == 'U':
+            coord = 'y'
+        elif direction == 'L':
+            coord = 'x'
+            distance = -distance
+        elif direction == 'D':
+            coord = 'y'
+            distance = -distance
+        else:
+            print('help')
+        wire_helper(coord, distance)
+    return wire
+
+def wire_init():
+    """Returns the instructions to lay down wires as a list of lists"""
+    with open("day3input.txt", "r") as file:
+        contents = file.read()
+        contents_split = contents.splitlines()
+        all_wires = []
+        for line in contents_split:
+            wire = line.split(",")
+            all_wires.append(wire)
+
+    return all_wires
