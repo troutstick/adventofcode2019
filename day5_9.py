@@ -4,58 +4,57 @@ from operator import add, mul, sub
 # Day 5
 #####################
 
-def intcode(input_list):
-    """Takes in an input list and mutates it accordingly"""
-    def give_param(param_num, mode, index):
-        index = input_list[index+param_num]
-        if mode:
-            param = index
-        else:
-            param = input_list[index]
-        return param
+def day5_p1():
+    input_list = original_input()
+    intcode(input_list, 1)
 
+def intcode(input_list, sys_id, starting_index=0):
+    """Takes in an input list and mutates it accordingly.
 
-    def intcode_helper(index, mode=0):
-        """Runs one iteration of the intcode program"""
+    sys_id: input for opcode3's program.
+    """
+    def param_index(param_num, imme_mode):
+        """Return the index to search for a parameter"""
+        i = index + param_num
+        if not imme_mode:
+            i = input_list[i]
+        return i
 
-        def add_mul(op):
-            input1 = give_param(1, p1mode, index)
-            input2 = give_param(2, p2mode, index)
-            output1 = give_param(3, p3mode, index)
-            input_list[output1] = op(input_list[input1], input_list[input2])
+    def add_mul(op):
+        in1index = param_index(1, p1mode)
+        in2index = param_index(2, p2mode)
+        out1index = param_index(3, 0) #writing is never in immediate mode
+        input_list[out1index] = op(input_list[in1index], input_list[in2index])
 
-        instructions = decode_instruction(input_list[index])
-        opcode = instructions[0]
-        p1mode = instructions[1]
-        p2mode = instructions[2]
-        p3mode = instructions[3]
+    def opcode3(input1):
+        out1index = param_index(1, 0)
+        input_list[out1index] = input1
+
+    def opcode4():
+        out1index = param_index(1, 0)
+        print(input_list[out1index])
+
+    running = True
+    index = starting_index
+    while running and index < (len(input_list) - 1):
+        [opcode, p1mode, p2mode, p3mode] = decode_instruction(input_list[index])
         if opcode == 1:
-            op = add
+            add_mul(add)
+            index += 4
         elif opcode == 2:
-            op = mul
+            add_mul(mul)
+            index += 4
         elif opcode == 3:
+            opcode3(sys_id)
+            index += 2
+        elif opcode == 4:
+            opcode4()
+            index += 2
         elif opcode == 99:
-            raise IntcodeException
+            running = False
+            print('Program halting')
         else:
-            print("you shouldn't see me")
-
-
-
-        if p2mode:
-            second_index = input_list[index+2]
-        output_index = input_list[index+3]
-
-        if
-
-        input_list[output_index] = op(input_list[first_index], input_list[second_index])
-
-    i = 0
-    while i < (len(input_list) - 1):
-        try:
-            intcode_helper(i)
-            i += 4
-        except IntcodeException:
-            break
+            raise IntcodeException('Unknown opcode')
 
 def decode_instruction(num):
     opcode = num % 100
@@ -68,6 +67,15 @@ def decode_instruction(num):
     num //= 10
     return [opcode, p1mode, p2mode, p3mode]
 
+def original_input():
+    """Returns the input list as provided."""
+    with open("day5input.txt", "r") as file:
+        contents = file.read()
+        input_list_str = contents.split(",")
+        input_list = []
+        for str in input_list_str:
+            input_list.append(int(str))
+    return input_list
 
 class IntcodeException(Exception):
     pass
