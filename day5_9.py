@@ -1,4 +1,4 @@
-from operator import add, mul, sub
+from operator import add, mul, sub, lt, eq
 
 #####################
 # Day 5
@@ -6,6 +6,14 @@ from operator import add, mul, sub
 
 def day5_p1():
     input_list = original_input()
+    intcode(input_list, 1)
+
+def day5_p2():
+    input_list = original_input()
+    intcode(input_list, 5)
+
+def test():
+    input_list = [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9]
     intcode(input_list, 1)
 
 def intcode(input_list, sys_id, starting_index=0):
@@ -20,19 +28,48 @@ def intcode(input_list, sys_id, starting_index=0):
             i = input_list[i]
         return i
 
+    def index_increment(num):
+        """Moves index pointer forward"""
+        nonlocal index
+        index += num
+
     def add_mul(op):
         in1index = param_index(1, p1mode)
         in2index = param_index(2, p2mode)
         out1index = param_index(3, 0) #writing is never in immediate mode
         input_list[out1index] = op(input_list[in1index], input_list[in2index])
+        index_increment(4)
 
     def opcode3(input1):
         out1index = param_index(1, 0)
         input_list[out1index] = input1
+        index_increment(2)
 
     def opcode4():
         out1index = param_index(1, 0)
         print(input_list[out1index])
+        index_increment(2)
+
+    def jump_if(boolean):
+        param1 = input_list[param_index(1, p1mode)]
+        if bool(param1) == boolean:
+            param2 = input_list[param_index(2, 0)]
+            print(param2)
+            nonlocal index
+            index = param2
+        else:
+            index_increment(3)
+
+    def compare(comparison):
+        param1 = input_list[param_index(1, p1mode)]
+        param2 = input_list[param_index(2, p2mode)]
+        param3 = input_list[param_index(3, p3mode)]
+        if comparison(param1, param2):
+            write = 1
+        else:
+            write = 0
+        input_list[param3] = write
+        index_increment(4)
 
     running = True
     index = starting_index
@@ -40,21 +77,27 @@ def intcode(input_list, sys_id, starting_index=0):
         [opcode, p1mode, p2mode, p3mode] = decode_instruction(input_list[index])
         if opcode == 1:
             add_mul(add)
-            index += 4
         elif opcode == 2:
             add_mul(mul)
-            index += 4
         elif opcode == 3:
             opcode3(sys_id)
-            index += 2
         elif opcode == 4:
             opcode4()
-            index += 2
+        elif opcode == 5:
+            jump_if(True)
+        elif opcode == 6:
+            jump_if(False)
+        elif opcode == 7:
+            compare(lt)
+        elif opcode == 8:
+            compare(eq)
         elif opcode == 99:
             running = False
             print('Program halting')
         else:
             raise IntcodeException('Unknown opcode')
+        print(index)
+
 
 def decode_instruction(num):
     opcode = num % 100
