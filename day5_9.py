@@ -69,7 +69,8 @@ def intcode(input_list, sys_id, starting_index=0):
         else:
             write = 0
         input_list[param3] = write
-        index_increment(4)
+        if index != param3:
+            index_increment(4)
 
     running = True
     index = starting_index
@@ -96,7 +97,6 @@ def intcode(input_list, sys_id, starting_index=0):
             print('Program halting')
         else:
             raise IntcodeException('Unknown opcode')
-        print(index)
 
 
 def decode_instruction(num):
