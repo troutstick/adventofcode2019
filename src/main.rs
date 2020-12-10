@@ -3,6 +3,7 @@ use glob::glob;
 
 mod day1;
 mod day2;
+mod day3;
 
 fn main() {
     for glob_result in glob("inputs/day?.txt").expect("Failed to read file in inputs") {
@@ -18,6 +19,9 @@ fn main() {
             }
             "day2" => {
                 day2::solve(&input);
+            }
+            "day3" => {
+                day3::solve(&input);
             }
             _ => println!("Given bad file stem name {}", file_stem),
         }
