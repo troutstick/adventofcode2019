@@ -1,4 +1,4 @@
-pub fn day1(input: &str) {
+pub fn solve(input: &str) {
     println!("Doing day 1");
     part1(input);
     part2(input);

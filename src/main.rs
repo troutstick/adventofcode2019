@@ -2,6 +2,7 @@ use std::fs;
 use glob::glob;
 
 mod day1;
+mod day2;
 
 fn main() {
     for glob_result in glob("inputs/day?.txt").expect("Failed to read file in inputs") {
@@ -13,7 +14,10 @@ fn main() {
         let input = fs::read_to_string(&filepath).unwrap();
         match file_stem {
             "day1" => {
-                day1::day1(&input);
+                day1::solve(&input);
+            }
+            "day2" => {
+                day2::solve(&input);
             }
             _ => println!("Given bad file stem name {}", file_stem),
         }
