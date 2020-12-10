@@ -1,3 +1,21 @@
+use std::fs;
+use glob::glob;
+
+mod day1;
+
 fn main() {
-    println!("Hello, world!");
+    for glob_result in glob("inputs/day?.txt").expect("Failed to read file in inputs") {
+        let filepath = glob_result.unwrap();
+        let file_stem = filepath.file_stem()
+                                .unwrap()
+                                .to_str()
+                                .unwrap();
+        let input = fs::read_to_string(&filepath).unwrap();
+        match file_stem {
+            "day1" => {
+                day1::day1(&input);
+            }
+            _ => println!("Given bad file stem name {}", file_stem),
+        }
+    }
 }
