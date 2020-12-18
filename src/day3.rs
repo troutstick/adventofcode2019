@@ -1,4 +1,4 @@
-use std::collections::hash_set::*;
+use std::{cmp::min, collections::hash_map::*};
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 struct Position {
@@ -10,63 +10,102 @@ pub fn solve(input: &str) {
     println!("Doing day 3");
     let wires: Vec<&str> = input.split_whitespace().collect();
     
-    let wire0 = init_wire(wires[0]);
-    let wire1 = init_wire(wires[1]);
-    let intersections: HashSet<Position> = 
-        wire0.intersection(&wire1).filter(|pos| pos.x != 0 && pos.y != 0)
-        .cloned()
-        .collect();
+    let wire0_map = init_wire(wires[0]);
 
-    let shortest = intersections.into_iter()
-        .map(|pos| pos.x.abs() + pos.y.abs())
-        .min().unwrap();
-    
-    println!("Answer to day 3 part 1 is {}", shortest);
+    closest_to_center(wires[1], wire0_map); 
 }
 
-fn init_wire(dir_str: &str) -> HashSet<Position> {
+fn closest_to_center(dir_str: &str, wire0: HashMap<Position, isize>) {
     let directions = dir_str.split(",").map(|s| s.trim());
     let mut x = 0;
     let mut y = 0;
-    let mut wire: HashSet<Position> = HashSet::new();
+
+    let mut distance = 0;
+
+    let mut min_manhattan = isize::MAX;
+    let mut min_sig_delay = isize::MAX;
+
+    let mut skipped_first = false;
+
     for dir in directions {
         let mut dir_chars = dir.chars();
-        let first_ch = dir_chars.next().unwrap();
-        let mut distance = dir_chars.collect::<String>().parse::<isize>().unwrap();
+        let (x_inc, y_inc) = incrementor(dir_chars.next().unwrap()); // parse direction
+        let mut section_len = dir_chars.collect::<String>().parse::<isize>().unwrap();
 
-        match first_ch {
-            'U' => {
-                while distance > 0 {
-                    wire.insert(Position{x,y});
-                    y += 1;
-                    distance -= 1;
+        while section_len > 0 {
+            if skipped_first {
+                let pos = Position{x,y};
+                if wire0.contains_key(&pos) {
+                    min_manhattan = min(x.abs()+y.abs(), min_manhattan);
+                    min_sig_delay = min(wire0.get(&pos).unwrap() + distance, min_sig_delay);
                 }
-            },
-            'D' => {
-                while distance > 0 {
-                    wire.insert(Position{x,y});
-                    y -= 1;
-                    distance -= 1;
-                }
-            },
-            'L' => {
-                while distance > 0 {
-                    wire.insert(Position{x,y});
-                    x -= 1;
-                    distance -= 1;
-                }
-            },
-            'R' => {
-                while distance > 0 {
-                    wire.insert(Position{x,y});
-                    x += 1;
-                    distance -= 1;
-                }
-            },
-            _   => panic!("Bad direction"),
+            } else {
+                skipped_first = true;
+            }
+            x += x_inc;
+            y += y_inc;
+            section_len -= 1;
+            distance += 1;
         }
+    }
+    let pos = Position{x,y};
+    if wire0.contains_key(&pos) {
+        min_manhattan = min(x.abs()+y.abs(), min_manhattan);
+        min_sig_delay = min(wire0.get(&pos).unwrap() + distance, min_sig_delay);
+    }
+    println!("Answer to day 3 part 1 is {}", min_manhattan);
+    println!("Answer to day 3 part 2 is {}", min_sig_delay);
+}
+
+fn incrementor(c: char) -> (isize, isize) {
+    let x_inc; 
+    let y_inc;
+    match c {
+        'U' => {
+            x_inc = 0;
+            y_inc = 1;
+        },
+        'D' => {
+            x_inc = 0;
+            y_inc = -1;
+        },
+        'L' => {
+            x_inc = -1;
+            y_inc = 0;
+        },
+        'R' => {
+            x_inc = 1;
+            y_inc = 0;
+        },
+        _   => panic!("Bad direction"),
+    }
+    (x_inc, y_inc)
+}
+
+fn init_wire(dir_str: &str) -> HashMap<Position, isize> {
+    let directions = dir_str.split(",").map(|s| s.trim());
+    let mut x = 0;
+    let mut y = 0;
+    let mut wire: HashMap<Position, isize> = HashMap::new();
+    let mut distance = 0;
+    for dir in directions {
+        let mut dir_chars = dir.chars();
+        let (x_inc, y_inc) = incrementor(dir_chars.next().unwrap()); // parse direction
+        let mut section_len = dir_chars.collect::<String>().parse::<isize>().unwrap();
+
+        while section_len > 0 {
+            let pos = Position{x,y};
+            if !wire.contains_key(&pos) {
+                wire.insert(pos, distance);
+            }
+            x += x_inc;
+            y += y_inc;
+            section_len -= 1;
+            distance += 1;
+        }
+
         let endpos = Position {x,y};
-        wire.insert(endpos);
+        wire.insert(endpos, distance);
     }
     wire
 }
