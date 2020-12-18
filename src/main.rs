@@ -1,9 +1,11 @@
 use std::fs;
 use glob::glob;
 
+mod utils;
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
 fn main() {
     for glob_result in glob("inputs/day?.txt").expect("Failed to read file in inputs") {
@@ -22,6 +24,9 @@ fn main() {
             }
             "day3" => {
                 day3::solve(&input);
+            }
+            "day4" => {
+                day4::solve();
             }
             _ => println!("Given bad file stem name {}", file_stem),
         }
