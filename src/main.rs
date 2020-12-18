@@ -6,6 +6,7 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
 
 fn main() {
     for glob_result in glob("inputs/day?.txt").expect("Failed to read file in inputs") {
@@ -27,6 +28,9 @@ fn main() {
             }
             "day4" => {
                 day4::solve();
+            }
+            "day5" => {
+                day5::solve(&input);
             }
             _ => println!("Given bad file stem name {}", file_stem),
         }
